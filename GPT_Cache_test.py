@@ -13,19 +13,30 @@ if __name__ == '__main__':
     dimension = 768
     ds = pre_process.pre_process_vector(dataset)
     print("处理后的列名：", ds["train"].column_names)
-    if os.path.isdir(f"D:\\毕设\\lab\\GPTCache-reproduction\\data\\{dataset}_embedding"):
-        ds = load_from_disk(f"D:\\毕设\\lab\\GPTCache-reproduction\\data\\{dataset}_embedding")
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isdir(rf"{dir_path}\data\{dataset}_embedding"):
+        ds = load_from_disk(rf"{dir_path}\data\{dataset}_embedding")
     else:
         ds = embedding.embed_ds(ds)
-        ds.save_to_disk(f"D:\\毕设\\lab\\GPTCache-reproduction\\data\\{dataset}_embedding")
+        ds.save_to_disk(rf"{dir_path}\data\{dataset}_embedding")
     print("处理后的列名：", ds["train"].column_names)
-    client = vector_database.create_milvus_db(f"D:\\毕设\\lab\\GPTCache-reproduction\\{milvus_db_name}")
+    '''client = vector_database.create_milvus_db(rf"{dir_path}\{milvus_db_name}")
     vector_database.create_collection(client, collection_name, dimension)
-    conn = sqlite3.connect(f"D:\\毕设\\lab\\GPTCache-reproduction\\{sqllite_db_name}")
+    conn = sqlite3.connect(rf"{dir_path}\{sqllite_db_name}")
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS gpt_cache")
     cursor.execute("CREATE TABLE gpt_cache (id INTEGER PRIMARY KEY, prompt TEXT)")
-    conn.commit()
-    #for i in range(len(ds["train"])):
-
-
+    conn.commit()'''
+    '''for i in range(len(ds["train"])):
+        # 查找在向量库中有没有相似的向量
+        query_embedding = ds["train"][i]["embedding"]
+        similar_ids = vector_database.search_collection(client, collection_name, query_embedding, top_k=1, threshold=0.8)
+        if similar_ids:
+            print(f"找到相似的向量，ID: {similar_ids[0]}")
+        else:
+            print("没有找到相似的向量，插入新的向量")
+            vector_database.insert_into_collection(client, collection_name, [query_embedding], [i])
+            cursor.execute("INSERT INTO gpt_cache (id, prompt) VALUES (?, ?)", (i, ds["train"][i]["prompt"]))
+            conn.commit()'''
+    
+   
