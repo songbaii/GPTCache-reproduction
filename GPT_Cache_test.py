@@ -19,6 +19,7 @@ if __name__ == '__main__':
         ds = load_from_disk(rf"{dir_path}/data/{dataset}_embedding")
     else:
         ds = embedding.embed_ds(ds)
+        ds["train"].remove_columns(["prompt"])
         ds.save_to_disk(rf"{dir_path}/data/{dataset}_embedding")
     print("处理后的列名：", ds["train"].column_names)
     client = vector_database.create_milvus_db(rf"{dir_path}/{milvus_db_name}")
@@ -26,21 +27,28 @@ if __name__ == '__main__':
     conn = sqlite3.connect(rf"{dir_path}/{sqllite_db_name}")
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS gpt_cache")
-    cursor.execute("CREATE TABLE gpt_cache (id INTEGER PRIMARY KEY, prompt TEXT)")
+    cursor.execute("CREATE TABLE gpt_cache (id INTEGER PRIMARY KEY, response TEXT)")
     conn.commit()
-    
-    '''for i in range(0, 1):
+    cache_hit = 0
+    right_hit = 0
+    miss = 0
+    for i in range(len(ds["train"])):
         # 查找在向量库中有没有相似的向量
         query_embedding = ds["train"][i]["embedding"]
-        similar_ids = vector_database.search_collection(client, collection_name, query_embedding, top_k=1, threshold=0.7)
+        similar_ids = vector_database.single_search_collection(client, collection_name, query_embedding, threshold=0.7)
         if similar_ids:
-            print(f"找到相似的向量，ID: {similar_ids[0]}")
-        else:
-            print("没有找到相似的向量，插入新的向量")
-            vector_database.insert_into_collection(client, collection_name, [query_embedding], [i])
-            cursor.execute("INSERT INTO gpt_cache (id, prompt) VALUES (?, ?)", (i, ds["train"][i]["prompt"]))
             conn.commit()
+            cache_hit += 1
+            cursor.execute("SELECT response FROM gpt_cache WHERE id=?", (similar_ids[0],))
+            cached_response = cursor.fetchone()
+            if cached_response[0] == ds["train"][i]["response_llama_3_8b"]:
+                right_hit += 1
+        else:
+            miss += 1
+            vector_database.insert_into_collection(client, collection_name, [query_embedding], [i])
+            cursor.execute("INSERT INTO gpt_cache (id, response) VALUES (?, ?)", (i, ds["train"][i]["response_llama_3_8b"]))
+    cursor.close()
     conn.close()
-    cursor.close()'''
-    
+    print(f"缓存命中: {cache_hit}, 正确命中: {right_hit}, 未命中: {miss}")
+    print(f"缓存命中率: {cache_hit / len(ds['train']):.2%}, 正确命中率: {right_hit / cache_hit if cache_hit > 0 else 0:.2%}")
    

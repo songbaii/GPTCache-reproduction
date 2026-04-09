@@ -26,7 +26,7 @@ def single_search_collection(client, collection_name, query_embedding, threshold
         search_params={"metric_type": "COSINE"}
     )
     ids = []
-    if results[0][0].score >= threshold:
+    if results and results[0] and results[0][0].score >= threshold:
         ids.append(results[0][0].id)
     return ids
 
