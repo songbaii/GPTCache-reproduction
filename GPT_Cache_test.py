@@ -14,15 +14,17 @@ if __name__ == '__main__':
     ds = pre_process.pre_process_vector(dataset)
     print("处理后的列名：", ds["train"].column_names)
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    if os.path.isdir(rf"{dir_path}\data\{dataset}_embedding"):
-        ds = load_from_disk(rf"{dir_path}\data\{dataset}_embedding")
+    dir_path = dir_path.replace("\\", "/")
+    if os.path.isdir(rf"{dir_path}/data/{dataset}_embedding"):
+        ds = load_from_disk(rf"{dir_path}/data/{dataset}_embedding")
     else:
         ds = embedding.embed_ds(ds)
-        ds.save_to_disk(rf"{dir_path}\data\{dataset}_embedding")
+        ds.save_to_disk(rf"{dir_path}/data/{dataset}_embedding")
     print("处理后的列名：", ds["train"].column_names)
-    '''client = vector_database.create_milvus_db(rf"{dir_path}\{milvus_db_name}")
+    '''
+    client = vector_database.create_milvus_db(rf"{dir_path}/{milvus_db_name}")
     vector_database.create_collection(client, collection_name, dimension)
-    conn = sqlite3.connect(rf"{dir_path}\{sqllite_db_name}")
+    conn = sqlite3.connect(rf"{dir_path}/{sqllite_db_name}")
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS gpt_cache")
     cursor.execute("CREATE TABLE gpt_cache (id INTEGER PRIMARY KEY, prompt TEXT)")
