@@ -4,3 +4,4 @@ milvus_gpt_cache.db
 .vscode
 sqlite_gpt_cache.db
 test_milvus.db
+test.py

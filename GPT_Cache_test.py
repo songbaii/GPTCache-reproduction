@@ -35,7 +35,7 @@ if __name__ == '__main__':
     for i in range(len(ds["train"])):
         # 查找在向量库中有没有相似的向量
         query_embedding = ds["train"][i]["embedding"]
-        similar_ids = vector_database.single_search_collection(client, collection_name, query_embedding, threshold=0.7)
+        similar_ids = vector_database.single_search_collection(client, collection_name, query_embedding, threshold=0.86)
         if similar_ids:
             conn.commit()
             cache_hit += 1
