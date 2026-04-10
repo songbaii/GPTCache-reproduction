@@ -16,7 +16,7 @@ def create_collection(collection_name: str, client: MilvusClient, dimension: int
     client.create_collection(collection_name, schema=schema, index_params=index_params)
 
 # 检索向量，返回相似id列表
-def single_search_collection(client, collection_name, query_embedding, threshold=0.7):
+def single_search_collection(client: MilvusClient, collection_name: str, query_embedding: list, threshold: float = 0.7):
     # Milvus 查询接口
     results = client.search(
         collection_name=collection_name,
@@ -31,7 +31,7 @@ def single_search_collection(client, collection_name, query_embedding, threshold
     return ids
 
 # 插入向量和id到集合, 应该没问题
-def insert_into_collection(client, collection_name, embeddings, ids):
+def insert_into_collection(client: MilvusClient, collection_name: str, embeddings: list, ids: list):
     # embeddings: List[List[float]]
     # ids: List[int] 或 List[str]
     entities = [{"id": id_, "embedding": emb} for id_, emb in zip(ids, embeddings)]
