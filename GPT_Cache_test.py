@@ -4,7 +4,7 @@ import vector_database
 import sqlite3
 import os
 from datasets import load_from_disk
-import matplotlib.pyplot as plt
+import picture
 
 if __name__ == '__main__':
     dataset = "SemBenchmarkClassificationSorted"
@@ -36,6 +36,7 @@ if __name__ == '__main__':
     miss = 0
     hit_rate = []
     sample_counts = []
+    error_rate = []
     for i in range(len(ds["train"])):
         # 查找在向量库中有没有相似的向量
         query_embedding = ds["train"][i]["embedding"]
@@ -52,20 +53,14 @@ if __name__ == '__main__':
             vector_database.insert_into_collection(client, collection_name, [query_embedding], [i])
             cursor.execute("INSERT INTO gpt_cache (id, response) VALUES (?, ?)", (i, ds["train"][i]["response_llama_3_8b"]))
         hit_rate.append(cache_hit / (cache_hit + miss))
+        error_rate.append((cache_hit - right_hit) / (cache_hit + miss))
         sample_counts.append(i + 1)
     cursor.close()
     conn.close()
     print(f"缓存命中: {cache_hit}, 正确命中: {right_hit}, 未命中: {miss}")
     print(f"缓存命中率: {cache_hit / len(ds['train']):.2%}, 正确命中率: {right_hit / cache_hit if cache_hit > 0 else 0:.2%}")
     # 绘制对应的缓存命中率图像
-    plt.figure(figsize=(10, 6))
-    plt.plot(sample_counts, hit_rate, label='Cache Hit Rate', color='blue')
-    plt.xlabel('Number of Samples')
-    plt.ylabel('Cache Hit Rate')
-    plt.ylim([0, 1])
-    plt.xlim([0, len(ds['train'])])
-    plt.title('Cache Hit Rate Over Time')
-    plt.legend()
-    plt.grid()
-    plt.savefig(rf"{dir_path}/result/cache_hit_rate.png")
+    path = os.path.join(os.path.dirname(__file__), "pictures")
+    os.makedirs(path, exist_ok=True)
+    picture.plot_error_rate(sample_counts, error_rate, os.path.join(path, "cache_error_rate.png"))
    

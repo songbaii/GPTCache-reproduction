@@ -5,3 +5,4 @@ milvus_gpt_cache.db
 sqlite_gpt_cache.db
 test_milvus.db
 test.py
+pictures
