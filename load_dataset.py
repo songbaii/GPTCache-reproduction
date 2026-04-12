@@ -13,11 +13,10 @@ def load_sembenchmark(dataset : str):
     return ds
 
 if __name__ == '__main__':
-    ds = load_sembenchmark("SemBenchmarkSearchQueries")
+    ds = load_sembenchmark("SemBenchmarkLmArena")
     print(ds.keys())
     print("训练集大小：", len(ds["train"]))
     print("列名：", ds["train"].column_names)
     prompts = ds["train"]["prompt"]
     avg_len = sum(len(p) for p in prompts) / len(prompts)
     print("prompt 平均长度：", avg_len)
-    

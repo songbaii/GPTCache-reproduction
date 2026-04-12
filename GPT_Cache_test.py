@@ -7,7 +7,7 @@ from datasets import load_from_disk
 import picture
 
 if __name__ == '__main__':
-    dataset = "SemBenchmarkClassificationSorted"
+    dataset = "SemBenchmarkSearchQueries"
     milvus_db_name  = "milvus_gpt_cache.db"
     sqllite_db_name = "sqlite_gpt_cache.db"
     collection_name = "classification_sorted_collection"
