@@ -57,7 +57,7 @@ if __name__ == '__main__':
             if similar_ids:
                 conn.commit()
                 cache_hit += 1
-                cursor.execute(f"SELECT id_set FROM {table_name} WHERE id=?", (similar_ids[0],))
+                cursor.execute(f"SELECT id_set FROM {table_name} WHERE id=?", (similar_ids[0][0],))
                 cached_response = cursor.fetchone()
                 if cached_response[0] == ds["train"][i]["ID_Set"]:
                     right_hit += 1
@@ -92,7 +92,7 @@ if __name__ == '__main__':
             if similar_ids:
                 conn.commit()
                 cache_hit += 1
-                cursor.execute(f"SELECT response FROM {table_name} WHERE id=?", (similar_ids[0],))
+                cursor.execute(f"SELECT response FROM {table_name} WHERE id=?", (similar_ids[0][0],))
                 cached_response = cursor.fetchone()
                 if cached_response[0] == ds["train"][i]["response_llama_3_8b"]:
                     right_hit += 1
@@ -146,4 +146,3 @@ if __name__ == '__main__':
         path = os.path.join(os.path.dirname(__file__), "pictures")
         os.makedirs(path, exist_ok=True)
         picture.plot_error_rate(sample_counts, error_rate, os.path.join(path, f"{dataset}_cache_error_rate.png"))
-   
