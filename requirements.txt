@@ -1,4 +1,4 @@
-pymilvus
+pymilvus[milvus_lite]
 datasets
 sentence-transformers
 matplotlib

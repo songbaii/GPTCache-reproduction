@@ -1,6 +1,6 @@
 from pymilvus import MilvusClient, DataType
 
-class milvus_bd:
+class milvus_db:
     def __init__(self, db_name: str):
         self.client = MilvusClient(db_name)
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     dimension = 768
     dir_path = os.path.dirname(os.path.abspath(__file__))
     dir_path = dir_path.replace("\\", "/")
-    test_db = milvus_bd(rf"{dir_path}/{test_db_name}")
+    test_db = milvus_db(rf"{dir_path}/{test_db_name}")
     test_db.create_collection(test_collection_name, dimension)
     import numpy as np
     print("开始 Milvus 测试")

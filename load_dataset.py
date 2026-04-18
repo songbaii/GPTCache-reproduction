@@ -13,7 +13,7 @@ def load_sembenchmark(dataset : str):
     return ds
 
 if __name__ == '__main__':
-    ds = load_sembenchmark("SemBenchmarkLmArena")
+    ds = load_sembenchmark("SemBenchmarkClassificationSorted")
     print(ds.keys())
     print("训练集大小：", len(ds["train"]))
     print("列名：", ds["train"].column_names)

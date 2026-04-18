@@ -17,7 +17,7 @@ class SimpleVCache:
         cache = SimpleVCache(delta=0.05)
         
         # 每次请求时调用
-        action, metadata = cache.decide(similarity=0.87, metadata=metadata)
+        action, metadata = cache.decide(similarity=0.87, s_vals=[...], c_vals=[...])
         
         # 如果 action 是 "explore"，生成新回复后需要反馈结果
         if action == "explore":

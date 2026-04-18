@@ -118,7 +118,7 @@ class vcache_hit_record_SQLiteManager(SQLiteManager):
         self.conn.commit()
         cursor.close()
 
-    def get(self, id: int)-> tuple[list, list]:
+    def search_by_id(self, id: int)-> tuple[list, list]:
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT s_vals, c_vals FROM vcache_hit_record WHERE id=?", (id,))
         result = cursor.fetchone()
