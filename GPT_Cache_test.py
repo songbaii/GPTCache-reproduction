@@ -1,11 +1,11 @@
-import pre_process
+from pre_process import pre_process
 import embedding 
 from vector_database import milvus_db
 import os
 from datasets import load_from_disk
-import picture
+from picture import picture_generator
 from my_sqllite3 import LMarenaSQLiteManager, ClassificationSortedSQLiteManager, SearchQueriesSQLiteManager, vcache_hit_record_SQLiteManager
-from vcache import SimpleVCache
+from vcache_final import SimpleVCache
 
 if __name__ == '__main__':
     dataset = "SemBenchmarkClassificationSorted"
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     collection_name = dataset + "_collection"
     table_name = dataset + "_table"
     embedding_model = 'paraphrase-albert-small-v2'
-    test_mode = 'vcache' # 'GPTcache' or 'vcache'
+    test_mode = 'GPTcache' # 'GPTcache' or 'vcache'
     if embedding_model == 'paraphrase-albert-small-v2':
         dimension = 768
     elif embedding_model == 'e5-large-v2':
@@ -145,4 +145,9 @@ if __name__ == '__main__':
     # 绘制对应的缓存命中率图像
     path = os.path.join(os.path.dirname(__file__), "pictures")
     os.makedirs(path, exist_ok=True)
-    picture.plot_error_rate(sample_counts, error_rate, os.path.join(path, f"{dataset}_{test_mode}_cache_error_rate.png"))
+    pic_gen = picture_generator(sample_counts, hit_rate, error_rate)
+    pic_gen.plot_error_rate(os.path.join(path, f"{dataset}_{test_mode}_cache_error_rate.png"))
+    pic_gen.plot_hit_rate(os.path.join(path, f"{dataset}_{test_mode}_cache_hit_rate.png"))
+    print("Cache plots saved.")
+    
+

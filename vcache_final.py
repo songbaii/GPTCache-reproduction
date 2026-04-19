@@ -17,12 +17,7 @@ class SimpleVCache:
         cache = SimpleVCache(delta=0.05)
         
         # 每次请求时调用
-        action, metadata = cache.decide(similarity=0.87, s_vals=[...], c_vals=[...])
-        
-        # 如果 action 是 "explore"，生成新回复后需要反馈结果
-        if action == "explore":
-            response = call_llm(prompt)
-            cache.update(metadata, similarity=0.87, is_correct=check_correctness(...))
+        action = cache.decide(similarity=0.87, s_vals=[...], c_vals=[...])
     """
     
     def __init__(self, delta: float = 0.05, min_samples: int = 6):
@@ -40,7 +35,7 @@ class SimpleVCache:
         
         # 逻辑回归模型（用于拟合 sigmoid 曲线）
         self.logistic = LogisticRegression(
-            C=1e6,  # 接近无正则化
+            penalty=None,
             solver='lbfgs', 
             max_iter=1000,
             fit_intercept=False

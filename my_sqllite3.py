@@ -26,18 +26,18 @@ class LMarenaSQLiteManager(SQLiteManager):
         self.conn.commit()
         cursor.close()
         
-    def insert(self, id: int, id_set: int):
+    def insert(self, id: int, id_set: list):
         cursor = self.conn.cursor()
-        cursor.execute(f"INSERT INTO LMarena (id, id_set) VALUES (?, ?)", (id, id_set))
+        cursor.execute(f"INSERT INTO LMarena (id, id_set) VALUES (?, ?)", (id, id_set[0]))
         self.conn.commit()
         cursor.close()
 
-    def search_by_id(self, id: int):
+    def search_by_id(self, id: int)-> list:
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT id_set FROM LMarena WHERE id=?", (id,))
         result = cursor.fetchone()
         cursor.close()
-        return result[0]
+        return [result[0]]
 
 class ClassificationSortedSQLiteManager(SQLiteManager):
     def create_table(self):
@@ -53,18 +53,18 @@ class ClassificationSortedSQLiteManager(SQLiteManager):
         self.conn.commit()
         cursor.close()
 
-    def insert(self, id: int, response: str):
+    def insert(self, id: int, response: list):
         cursor = self.conn.cursor()
-        cursor.execute(f"INSERT INTO ClassificationSorted (id, response) VALUES (?, ?)", (id, response))
+        cursor.execute(f"INSERT INTO ClassificationSorted (id, response) VALUES (?, ?)", (id, response[0]))
         self.conn.commit()
         cursor.close()
 
-    def search_by_id(self, id: int)-> str:
+    def search_by_id(self, id: int)-> list:
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT response FROM ClassificationSorted WHERE id=?", (id,))
         result = cursor.fetchone()
         cursor.close()
-        return result[0]
+        return [result[0]]
 
 class SearchQueriesSQLiteManager(SQLiteManager):
     def create_table(self):
@@ -81,18 +81,18 @@ class SearchQueriesSQLiteManager(SQLiteManager):
         self.conn.commit()
         cursor.close()
 
-    def insert(self, id: int, id_set: int, cluster_id: int):
+    def insert(self, id: int, values: list):
         cursor = self.conn.cursor()
-        cursor.execute(f"INSERT INTO SearchQueries (id, id_set, cluster_id) VALUES (?, ?, ?)", (id, id_set, cluster_id))
+        cursor.execute(f"INSERT INTO SearchQueries (id, id_set, cluster_id) VALUES (?, ?, ?)", (id, values[0], values[1]))
         self.conn.commit()
         cursor.close()
 
-    def search_by_id(self, id: int)-> tuple[int, int]:
+    def search_by_id(self, id: int)-> list[int, int]:
         cursor = self.conn.cursor()
         cursor.execute(f"SELECT id_set, cluster_id FROM SearchQueries WHERE id=?", (id,))
         result = cursor.fetchone()
         cursor.close()
-        return result[0], result[1]
+        return [result[0], result[1]]
 
 class vcache_hit_record_SQLiteManager(SQLiteManager):
     def create_table(self):
