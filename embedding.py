@@ -53,7 +53,7 @@ class embedding_generator:
 if __name__ == "__main__":
     import os
     from pre_process import pre_processor
-    dataset = "SemBenchmarkClassificationSorted"
+    dataset = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
@@ -64,8 +64,9 @@ if __name__ == "__main__":
     embedder = embedding_generator(embedding_model)
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    processor = pre_processor(dataset)
-    ds = processor.pre_process_vector()
-    print("开始嵌入数据集...", flush=True)
-    ds = embedder.embed_ds(ds, rf"{dir_path}/data/{dataset}_{embedding_model}_embedding")
-    print("处理完毕", flush=True)
+    for ds_name in dataset:
+        processor = pre_processor(ds_name)
+        ds = processor.pre_process_vector()
+        print(f"开始嵌入 {ds_name} 数据集...", flush=True)
+        ds = embedder.embed_ds(ds, rf"{dir_path}/data/{ds_name}_{embedding_model}_embedding")
+        print(f"{ds_name} 处理完毕", flush=True)

@@ -77,7 +77,7 @@ class gpt_cache_test(cache_test):
         self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
         self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt_hit_rate.png")
-        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt_error_rate.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt__error_rate.png")
         print("Cache plots saved.")
 
 class vcache_base(cache_test):
@@ -121,9 +121,9 @@ class vcache_base(cache_test):
         self.milvus_db.close()
         self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
-        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_hit_rate.png")
-        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_error_rate.png")
-                
+        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_hit_rate.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
+
 if __name__ == "__main__":
     dataset = "SemBenchmarkClassificationSorted"
     # SemBenchmarkClassificationSorted
