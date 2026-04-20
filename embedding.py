@@ -44,26 +44,28 @@ class embedding_generator:
             else:
                 raise ValueError("不支持的embedding_model")
             model = SentenceTransformer(embedding_model_real, trust_remote_code=True)
-            ds = ds.map(lambda x: {**x, "embedding": model.encode(x["prompt"], normalize_embeddings=True)}, batched=True)
-            ds["train"].remove_columns(["prompt"])
+            ds = ds.map(lambda x: {**x, "embedding": model.encode(x["prompt"], normalize_embeddings=True, batch_size=32)}, batched=True, batch_size=16)
+            ds["train"] = ds["train"].remove_columns(["prompt"])
             ds.save_to_disk(path)
             return ds
 
 
 if __name__ == "__main__":
-    import numpy as np
-    sentences = [
-        "The cat is on the roof.",
-        "The cat is on the roof.",
-        "A dog is in the garden.",
-        "The sun is shining brightly."
-    ]
-    gte_large_en_v1_5_embedding_model = embedding_generator('gte-large-en-v1.5')
-    paraphrase_albert_small_v2_embedding_model = embedding_generator('paraphrase-albert-small-v2')
-    embeddings1 = gte_large_en_v1_5_embedding_model.embed_sentences(sentences)
-    embeddings2 = paraphrase_albert_small_v2_embedding_model.embed_sentences(sentences)
-    if np.array_equal(embeddings1[0], embeddings2[0]): # 是确定嵌入模型的输出是相同的
-        print("嵌入模型输出相同的句子得到相同的嵌入")
-    else:
-        print("嵌入模型输出相同的句子得到不同的嵌入")
-    print(embeddings1)
+    import os
+    from pre_process import pre_processor
+    dataset = "SemBenchmarkClassificationSorted"
+    # SemBenchmarkClassificationSorted
+    # SemBenchmarkLmArena
+    # SemBenchmarkSearchQueries
+    embedding_model = "e5-large-v2"
+    # 'paraphrase-albert-small-v2' check
+    # 'gte-large-en-v1.5',暂时不知道为什么不能使用
+    # 'e5-large-v2' check 
+    embedder = embedding_generator(embedding_model)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    processor = pre_processor(dataset)
+    ds = processor.pre_process_vector()
+    print("开始嵌入数据集...", flush=True)
+    ds = embedder.embed_ds(ds, rf"{dir_path}/data/{dataset}_{embedding_model}_embedding")
+    print("处理完毕", flush=True)

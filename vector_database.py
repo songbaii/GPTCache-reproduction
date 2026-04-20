@@ -6,7 +6,7 @@ class milvus_db:
 
     def create_collection(self, collection_name: str, dimension: int):
         schema = self.client.create_schema()
-        schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True, auto_id=True)
+        schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True, auto_id=False)
         schema.add_field(field_name="embedding", datatype=DataType.FLOAT_VECTOR, dim=dimension)
         index_params = self.client.prepare_index_params()
         index_params.add_index(field_name="embedding", index_type="FLAT", metric_type="COSINE")
@@ -32,6 +32,9 @@ class milvus_db:
         if results and results[0] and results[0][0].score >= threshold:
             ids.append([results[0][0].id, results[0][0].score])
         return ids
+    
+    def close(self):
+        self.client.close()
 
 if __name__ == '__main__':
     import os
@@ -58,4 +61,3 @@ if __name__ == '__main__':
         print("Milvus 测试通过")
     else:
         print("Milvus 测试失败")
-    os.remove(rf"{dir_path}/{test_db_name}")

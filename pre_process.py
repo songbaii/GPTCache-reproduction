@@ -24,11 +24,11 @@ class pre_processor:
     def pre_process_vector(self)-> DatasetDict:
         ds = self.load_sembenchmark()
         if self.dataset == "SemBenchmarkClassificationSorted":
-            columns_to_remove = ['dataset_name', 'emb_gte', 'emb_gte_lat', 'response_llama_3_8b_lat', 'output_format']
+            columns_to_remove = ['dataset_name', 'emb_gte', 'emb_gte_lat', 'response_llama_3_8b_lat', 'output_format', 'id']
         elif self.dataset == "SemBenchmarkSearchQueries":
-            columns_to_remove = ['word_count', 'emb_gte', 'emb_gte_lat', 'response_llama_3_8b_lat', 'response_llama_3_8b']
+            columns_to_remove = ['word_count', 'emb_gte', 'emb_gte_lat', 'response_llama_3_8b_lat', 'response_llama_3_8b', 'id']
         elif self.dataset == "SemBenchmarkLmArena":
-            columns_to_remove = ['dataset_name', 'emb_text-embedding-3-large', 'emb_text-embedding-3-large_lat','emb_text-embedding-3-small', 'emb_text-embedding-3-small_lat', 'response_gpt-4o-mini_lat', 'response_gpt-4.1-nano_lat', 'emb_gte', 'emb_gte_lat', 'emb_gte_ft', 'emb_gte_ft_lat', 'emb_e5_large_v2', 'emb_e5_large_v2_lat', 'emb_e5_large_v2_ft', 'emb_e5_large_v2_ft_lat']
+            columns_to_remove = ['dataset_name', 'emb_text-embedding-3-large', 'emb_text-embedding-3-large_lat','emb_text-embedding-3-small', 'emb_text-embedding-3-small_lat', 'response_gpt-4o-mini_lat', 'response_gpt-4.1-nano_lat', 'emb_gte', 'emb_gte_lat', 'emb_gte_ft', 'emb_gte_ft_lat', 'emb_e5_large_v2', 'emb_e5_large_v2_lat', 'emb_e5_large_v2_ft', 'emb_e5_large_v2_ft_lat', 'response_gpt-4o-mini', 'response_gpt-4.1-nano', 'id']
         else:
             columns_to_remove = []
         ds["train"] = ds["train"].remove_columns(columns_to_remove)
@@ -38,8 +38,9 @@ class pre_processor:
     
 
 if __name__ == '__main__':
-    dataset = "SemBenchmarkLmArena"
-    print(f"向量化处理测试{dataset}数据集")
-    processor = pre_processor(dataset)
-    ds = processor.pre_process_vector()
-    print("处理后的列名：", ds["train"].column_names)
+    dataset = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
+    for ds in dataset:
+        print(f"向量化处理测试{ds}数据集")
+        processor = pre_processor(ds)
+        ds = processor.pre_process_vector()
+        print("处理后的列名：", ds["train"].column_names)
