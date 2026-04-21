@@ -7,6 +7,7 @@ from vector_database import milvus_db
 from my_sqllite3 import LMarenaSQLiteManager, ClassificationSortedSQLiteManager, SearchQueriesSQLiteManager, vcache_hit_record_SQLiteManager
 from sigmod_probality import sigmod_probality
 from vcache_final import SimpleVCache
+from sigmod_iid import sigmod_iid
 import os
 
 class cache_test:
@@ -47,11 +48,11 @@ class cache_test:
 class gpt_cache_test(cache_test):
     def __init__(self, dataset, embedding_model, must_run):
         super().__init__(dataset, embedding_model)
-        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_get_list_cache.json")
+        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache.json")
         self.must_run = must_run
 
     def test_self(self):
-        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_get_list_cache.json") and not self.must_run:
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache.json") and not self.must_run:
             print("Loading results from cache...")
             load_result = self.list_store.load_list()
             self.sample_counts = load_result[0]
@@ -125,7 +126,7 @@ class vcache_base(cache_test):
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
 
 if __name__ == "__main__":
-    dataset = "SemBenchmarkClassificationSorted"
+    dataset = "SemBenchmarkSearchQueries"
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries

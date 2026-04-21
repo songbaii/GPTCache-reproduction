@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
-    embedding_model = "e5-large-v2"
+    embedding_model = "gte-large-en-v1.5"
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 

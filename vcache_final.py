@@ -20,7 +20,7 @@ class SimpleVCache:
         action = cache.decide(similarity=0.87, s_vals=[...], c_vals=[...])
     """
     
-    def __init__(self, delta: float = 0.05, min_samples: int = 6):
+    def __init__(self, delta: float = 0.05, min_samples: int = 3):
         """
         Args:
             delta: 用户设定的最大错误率（如 0.05 表示允许 5% 错误率）
