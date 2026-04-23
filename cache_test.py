@@ -46,7 +46,7 @@ class cache_test:
         pass
         
 class gpt_cache_test(cache_test):
-    def __init__(self, dataset, embedding_model, must_run):
+    def __init__(self, dataset, embedding_model, must_run = False):
         super().__init__(dataset, embedding_model)
         self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache.json")
         self.must_run = must_run
@@ -73,8 +73,9 @@ class gpt_cache_test(cache_test):
                 self.hit_rate.append(self.cache_hit / (self.cache_hit + self.miss))
                 self.error_rate.append((self.cache_hit - self.right_hit) / (self.cache_hit + self.miss))
                 self.sample_counts.append(i + 1)
-            self.sqllite_db.close()
             self.list_store.save_list([self.sample_counts, self.hit_rate, self.error_rate])
+        self.sqllite_db.close()
+        self.milvus_db.close()
         self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
         self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt_hit_rate.png")
@@ -82,41 +83,51 @@ class gpt_cache_test(cache_test):
         print("Cache plots saved.")
 
 class vcache_base(cache_test):
-    def __init__(self, dataset, embedding_model, cache):
+    def __init__(self, dataset, embedding_model, cache, must_run=False):
         super().__init__(dataset, embedding_model)
         self.cache = cache
-    
+        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json")
+        self.must_run = must_run
+
     def test_self(self):
-        self.hit_db = vcache_hit_record_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
-        print("开始 VCache 测试", flush=True)
-        for i in range(len(self.ds["train"])):
-            query_embedding = self.ds["train"][i]["embedding"]
-            similar_ids = self.milvus_db.single_search_collection(self.dataset + "_collection", query_embedding, threshold=-1)
-            if similar_ids:
-                s_vals, c_vals = self.hit_db.search_by_id(similar_ids[0][0])
-                if self.cache.decide(similar_ids[0][1], s_vals, c_vals) == 'exploit':
-                    self.cache_hit += 1
-                    if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]:
-                        self.right_hit += 1
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json") and not self.must_run:
+            print("Loading results from cache...")
+            load_result = self.list_store.load_list()
+            self.sample_counts = load_result[0]
+            self.hit_rate = load_result[1]
+            self.error_rate = load_result[2]
+        else:
+            self.hit_db = vcache_hit_record_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
+            print("开始 VCache 测试", flush=True)
+            for i in range(len(self.ds["train"])):
+                query_embedding = self.ds["train"][i]["embedding"]
+                similar_ids = self.milvus_db.single_search_collection(self.dataset + "_collection", query_embedding, threshold=-1)
+                if similar_ids:
+                    s_vals, c_vals = self.hit_db.search_by_id(similar_ids[0][0])
+                    if self.cache.decide(similar_ids[0][1], s_vals, c_vals) == 'exploit':
+                        self.cache_hit += 1
+                        if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]:
+                            self.right_hit += 1
+                    else:
+                        self.miss += 1
+                        s_vals.append(similar_ids[0][1])
+                        if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]:
+                            c_vals.append(1)
+                        else:
+                            c_vals.append(0)
+                            self.hit_db.add_or_update(i, [-1, 1], [0, 1])
+                            self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                            self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                        self.hit_db.add_or_update(similar_ids[0][0], s_vals, c_vals)
                 else:
                     self.miss += 1
-                    s_vals.append(similar_ids[0][1])
-                    if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]:
-                        c_vals.append(1)
-                    else:
-                        c_vals.append(0)
-                        self.hit_db.add_or_update(i, [-1, 1], [0, 1])
-                        self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
-                        self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
-                    self.hit_db.add_or_update(similar_ids[0][0], s_vals, c_vals)
-            else:
-                self.miss += 1
-                self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
-                self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
-                self.hit_db.add_or_update(i, [-1, 1], [0, 1])
-            self.hit_rate.append(self.cache_hit / (self.cache_hit + self.miss))
-            self.error_rate.append((self.cache_hit - self.right_hit) / (self.cache_hit + self.miss))
-            self.sample_counts.append(i + 1)
+                    self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                    self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                    self.hit_db.add_or_update(i, [-1, 1], [0, 1])
+                self.hit_rate.append(self.cache_hit / (self.cache_hit + self.miss))
+                self.error_rate.append((self.cache_hit - self.right_hit) / (self.cache_hit + self.miss))
+                self.sample_counts.append(i + 1)
+            self.list_store.save_list([self.sample_counts, self.hit_rate, self.error_rate])
         self.sqllite_db.close()
         self.hit_db.close()
         self.milvus_db.close()
@@ -126,7 +137,7 @@ class vcache_base(cache_test):
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
 
 if __name__ == "__main__":
-    dataset = "SemBenchmarkSearchQueries"
+    dataset = "SemBenchmarkClassificationSorted"
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
@@ -134,6 +145,6 @@ if __name__ == "__main__":
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = vcache_base(dataset, embedding_model, SimpleVCache(delta=0.015))
+    test = vcache_base(dataset, embedding_model, SimpleVCache(delta=0.1), must_run=True)
     test.test_self()
     
