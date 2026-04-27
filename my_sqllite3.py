@@ -126,3 +126,16 @@ class vcache_hit_record_SQLiteManager(SQLiteManager):
         s_vals = json.loads(result[0])
         c_vals = json.loads(result[1])
         return s_vals, c_vals
+    
+    def get_all_records(self) -> list[tuple[int, list, list]]:
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT id, s_vals, c_vals FROM vcache_hit_record")
+        results = cursor.fetchall()
+        cursor.close()
+        records = []
+        for row in results:
+            id = row[0]
+            s_vals = json.loads(row[1])
+            c_vals = json.loads(row[2])
+            records.append((id, s_vals, c_vals))
+        return records

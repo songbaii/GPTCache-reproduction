@@ -136,15 +136,59 @@ class vcache_base(cache_test):
         self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_hit_rate.png")
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
 
+
+class gpt_kde_test(cache_test):
+    def test_self(self):
+        self.hit_db = vcache_hit_record_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
+        for i in range(len(self.ds["train"])):
+            query_embedding = self.ds["train"][i]["embedding"]
+            similar_ids = self.milvus_db.single_search_collection(self.dataset + "_collection", query_embedding, threshold=-1) #这里不设置阈值，找到最相近的即可
+            if similar_ids: # 只考虑命中的情况
+                if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]: # 如果命中正确
+                    s_vals, c_vals = self.hit_db.search_by_id(similar_ids[0][0])
+                    s_vals.append(similar_ids[0][1])
+                    c_vals.append(1)
+                    self.hit_db.add_or_update(similar_ids[0][0], s_vals, c_vals)
+                else: # 如果命中错误
+                    s_vals, c_vals = self.hit_db.search_by_id(similar_ids[0][0])
+                    s_vals.append(similar_ids[0][1])
+                    c_vals.append(0)
+                    self.hit_db.add_or_update(similar_ids[0][0], s_vals, c_vals)
+                    self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                    self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                    self.hit_db.add_or_update(i, [], [])
+            else: # 如果整个向量库中没有其他向量
+                self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                self.hit_db.add_or_update(i, [], [])
+        print("分布计算完成")
+        records = self.hit_db.get_all_records()
+        right_similarities = []
+        wrong_similarities = []
+        for record in records:
+            _, s_vals, c_vals = record
+            for s, c in zip(s_vals, c_vals):
+                if c == 1:
+                    right_similarities.append(s)
+                else:
+                    wrong_similarities.append(s)
+        # 接下来使用核函数展示分布
+        print("开始绘制分布图...")
+        self.pic_gen = picture_generator([], [], [])
+        self.pic_gen.kde_gen(right_similarities, wrong_similarities, rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt_kde_similarities.png")
+        self.hit_db.close()
+        self.sqllite_db.close()
+        self.milvus_db.close()
+
 if __name__ == "__main__":
     dataset = "SemBenchmarkClassificationSorted"
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
-    embedding_model = "e5-large-v2"
+    embedding_model = "paraphrase-albert-small-v2"
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = vcache_base(dataset, embedding_model, SimpleVCache(delta=0.1), must_run=True)
+    test = gpt_kde_test(dataset, embedding_model)
     test.test_self()
     

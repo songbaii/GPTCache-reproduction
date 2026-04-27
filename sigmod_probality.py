@@ -8,6 +8,7 @@ class sigmod_probality:
         self.logistic_regression: LogisticRegression = LogisticRegression(
             C=np.inf, solver="lbfgs", tol=1e-8, max_iter=1000, fit_intercept=False
         )
+        self.delta = delta
         self.P_c = 1 - delta
 
     def decide(self,similarity: float, s_vals: list, c_vals: list) -> str:

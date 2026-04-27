@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde
+import numpy as np
 
 class picture_generator:
     def __init__(self, sample_counts: list, hit_rate: list, error_rate: list):
@@ -26,6 +28,22 @@ class picture_generator:
         plt.title('Error Rate vs Number of Samples')
         plt.ylim(0, max(self.error_rate))
         plt.xlim(0, max(self.sample_counts))
+        plt.legend()
+        plt.grid()
+        plt.savefig(save_path)
+
+    def kde_gen(self, right_similarities: list, wrong_similarities: list, save_path: str):
+        kde_right = gaussian_kde(right_similarities)
+        kde_wrong = gaussian_kde(wrong_similarities)
+        x = np.linspace(min(right_similarities + wrong_similarities), max(right_similarities + wrong_similarities), 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        plt.figure(figsize=(10, 6))
+        plt.plot(x, y_right, label='Right Similarities', color='green')
+        plt.plot(x, y_wrong, label='Wrong Similarities', color='red')   
+        plt.xlabel('Value')
+        plt.ylabel('Density')
+        plt.title('Kernel Density Estimation')
         plt.legend()
         plt.grid()
         plt.savefig(save_path)
