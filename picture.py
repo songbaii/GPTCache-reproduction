@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
+import matplotlib
 import numpy as np
 
 class picture_generator:
@@ -33,20 +34,25 @@ class picture_generator:
         plt.savefig(save_path)
 
     def kde_gen(self, right_similarities: list, wrong_similarities: list, save_path: str):
-        kde_right = gaussian_kde(right_similarities)
-        kde_wrong = gaussian_kde(wrong_similarities)
+        matplotlib.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'SimHei', 'WenQuanYi Zen Hei']
+        matplotlib.rcParams['axes.unicode_minus'] = False
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
         x = np.linspace(min(right_similarities + wrong_similarities), max(right_similarities + wrong_similarities), 1000)
         y_right = kde_right(x)
         y_wrong = kde_wrong(x)
+        mean_right = np.mean(right_similarities)
+        mean_wrong = np.mean(wrong_similarities)
         plt.figure(figsize=(10, 6))
-        plt.plot(x, y_right, label='Right Similarities', color='green')
-        plt.plot(x, y_wrong, label='Wrong Similarities', color='red')   
-        plt.xlabel('Value')
-        plt.ylabel('Density')
-        plt.title('Kernel Density Estimation')
+        plt.axvline(mean_right, color='green', linestyle='--', label=f'正确命中均值: {mean_right:.4f}')
+        plt.axvline(mean_wrong, color='red', linestyle='--', label=f'错误命中均值: {mean_wrong:.4f}')   
+        plt.plot(x, y_right, label='正确命中', color='green')
+        plt.plot(x, y_wrong, label='错误命中', color='red')   
+        plt.xlabel('相似度')
+        plt.ylabel('概率密度')
         plt.legend()
         plt.grid()
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches="tight", pad_inches=0)
 
 if __name__ == '__main__':
     import os
