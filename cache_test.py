@@ -78,8 +78,10 @@ class gpt_cache_test(cache_test):
         self.milvus_db.close()
         self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
-        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt_hit_rate.png")
-        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_gpt__error_rate.png")
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}", exist_ok=True)
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}", exist_ok=True)
+        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_hit_rate.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate.png")
         print("Cache plots saved.")
 
 class vcache_base(cache_test):
@@ -90,7 +92,7 @@ class vcache_base(cache_test):
         self.must_run = must_run
 
     def test_self(self):
-        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json") and not self.must_run:
+        if os.path.exists(self.list_store.file_path) and not self.must_run:
             print("Loading results from cache...")
             load_result = self.list_store.load_list()
             self.sample_counts = load_result[0]
@@ -128,13 +130,15 @@ class vcache_base(cache_test):
                 self.error_rate.append((self.cache_hit - self.right_hit) / (self.cache_hit + self.miss))
                 self.sample_counts.append(i + 1)
             self.list_store.save_list([self.sample_counts, self.hit_rate, self.error_rate])
+            self.hit_db.close()
         self.sqllite_db.close()
-        self.hit_db.close()
         self.milvus_db.close()
         self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
-        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_hit_rate.png")
-        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}", exist_ok=True)
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}", exist_ok=True)
+        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/{self.cache.__class__.__name__}_delta = {self.cache.delta}_hit_rate.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
 
 class gpt_kde_test(cache_test):
     def __init__(self, dataset, embedding_model, must_run=False):
@@ -191,14 +195,13 @@ class gpt_kde_test(cache_test):
         self.sqllite_db.close()
         self.milvus_db.close()
 
-
 class better_vache(vcache_base):
     def __init__(self, dataset, embedding_model, cache, delta, must_run=False):
         super().__init__(dataset, embedding_model, cache, must_run)
         self.delta = delta
 
     def test_self(self):
-        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json") and not self.must_run:
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_better_vcache_get_list_cache.json") and not self.must_run:
             print("Loading results from cache...")
             load_result = self.list_store.load_list()
             self.sample_counts = load_result[0]
@@ -244,15 +247,20 @@ class better_vache(vcache_base):
         self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_hit_rate.png")
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_error_rate.png")
 
+class gpt_cache_new(gpt_cache_test):
+    def test_self(self):
+        pass
+    
+
 if __name__ == "__main__":
-    dataset = "SemBenchmarkLmArena"
+    dataset = "SemBenchmarkClassificationSorted"
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
-    embedding_model = "e5-large-v2"
+    embedding_model = "paraphrase-albert-small-v2"
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = better_vache(dataset, embedding_model, SimpleVCache(0.015), delta=0.015, must_run=True)
+    test = gpt_cache_test(dataset, embedding_model, must_run=True)
     test.test_self()
     

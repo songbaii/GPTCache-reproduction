@@ -33,6 +33,19 @@ class milvus_db:
             ids.append([results[0][0].id, results[0][0].score])
         return ids
     
+    def search_top_k(self, collection_name: str, query_embedding: list, k: int = 3):
+        results = self.client.search(
+            collection_name=collection_name,
+            data=[query_embedding],
+            limit=k,
+            anns_field="embedding",
+            search_params={"metric_type": "COSINE"}
+        )
+        ids = []
+        for result in results[0]:
+            ids.append([result.id, result.score])
+        return ids
+
     def close(self):
         self.client.close()
 
