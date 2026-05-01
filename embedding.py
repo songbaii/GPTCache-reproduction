@@ -33,6 +33,7 @@ class embedding_generator:
         # 'Alibaba-NLP/gte-large-en-v1.5',暂时不知道为什么不能使用
         # 'intfloat/e5-large-v2' check 
         if os.path.isdir(path):
+            print("Loading embedded dataset from disk...")
             return load_from_disk(path)
         else:
             if self.embedding_model == 'paraphrase-albert-small-v2':
@@ -50,7 +51,6 @@ class embedding_generator:
 
 
 if __name__ == "__main__":
-    import os
     from pre_process import pre_processor
     dataset = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
     # SemBenchmarkClassificationSorted

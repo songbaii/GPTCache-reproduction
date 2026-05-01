@@ -15,7 +15,7 @@ class cache_test:
     def __init__(self, dataset : str, embedding_model : str, length_limit: int = -1):
         self.dataset = dataset
         self.embedding_mod = embedding_model
-        self.processor = pre_processor(dataset, length_limit=length_limit)
+        self.processor = pre_processor(dataset)
         self.embedding_generator = embedding_generator(embedding_model)
         self.dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         self.milvus_db = milvus_db(rf"{self.dir_path}/milvus_cache.db")
@@ -88,7 +88,7 @@ class gpt_cache_test(cache_test):
 
 class gpt_cache_test_new(cache_test):
     def __init__(self, dataset, embedding_model, must_run = False):
-        super().__init__(dataset, embedding_model, length_limit=512)
+        super().__init__(dataset, embedding_model)
         self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache.json")
         self.must_run = must_run
         self.prompt_db = gpt_cache_prompt_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
