@@ -4,17 +4,18 @@ from embedding import embedding_generator
 from list_store import list_store
 from pre_process import pre_processor
 from vector_database import milvus_db
-from my_sqllite3 import LMarenaSQLiteManager, ClassificationSortedSQLiteManager, SearchQueriesSQLiteManager, vcache_hit_record_SQLiteManager
+from my_sqllite3 import LMarenaSQLiteManager, ClassificationSortedSQLiteManager, SearchQueriesSQLiteManager, vcache_hit_record_SQLiteManager, gpt_cache_prompt_SQLiteManager
 from sigmod_probality import sigmod_probality
 from vcache_final import SimpleVCache
 from sigmod_iid import sigmod_iid
+from gpt_llm_onnx import Onnx_eval
 import os
 
 class cache_test:
-    def __init__(self, dataset : str, embedding_model : str):
+    def __init__(self, dataset : str, embedding_model : str, length_limit: int = -1):
         self.dataset = dataset
         self.embedding_mod = embedding_model
-        self.processor = pre_processor(dataset)
+        self.processor = pre_processor(dataset, length_limit=length_limit)
         self.embedding_generator = embedding_generator(embedding_model)
         self.dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         self.milvus_db = milvus_db(rf"{self.dir_path}/milvus_cache.db")
@@ -82,6 +83,61 @@ class gpt_cache_test(cache_test):
         os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}", exist_ok=True)
         self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_hit_rate.png")
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate.png")
+        print("Cache plots saved.")
+
+
+class gpt_cache_test_new(cache_test):
+    def __init__(self, dataset, embedding_model, must_run = False):
+        super().__init__(dataset, embedding_model, length_limit=512)
+        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache.json")
+        self.must_run = must_run
+        self.prompt_db = gpt_cache_prompt_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
+        self.Onnx_evaluator = Onnx_eval()
+
+    def test_self(self):
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache.json") and not self.must_run:
+            print("Loading results from cache...")
+            load_result = self.list_store.load_list()
+            self.sample_counts = load_result[0]
+            self.hit_rate = load_result[1]
+            self.error_rate = load_result[2]
+        else:
+            for i in range(len(self.ds["train"])):
+                query_embedding = self.ds["train"][i]["embedding"]
+                similar_ids = self.milvus_db.search_top_k(self.dataset + "_collection", query_embedding)
+                if similar_ids:
+                    candidates = []
+                    for smilar_id, _ in similar_ids:
+                        candidates.append(self.prompt_db.search_by_id(smilar_id))
+                    score = self.Onnx_evaluator.eval_one_to_many(self.ds["train"][i]["prompt"], candidates)
+                    max_score_index = score.index(max(score))
+                    if score[max_score_index] > 0.86: # 这个阈值
+                        self.cache_hit += 1
+                        if self.sqllite_db.search_by_id(similar_ids[max_score_index][0]) == [self.ds["train"][i][key] for key in self.key_name]:
+                            self.right_hit += 1
+                    else:
+                        self.miss += 1
+                        self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                        self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                        self.prompt_db.add_or_update(i, self.ds["train"][i]["prompt"])
+                else:
+                    self.miss += 1
+                    self.milvus_db.insert_into_collection(self.dataset + "_collection", [query_embedding], [i])
+                    self.sqllite_db.insert(i, [self.ds["train"][i][key] for key in self.key_name])
+                    self.prompt_db.add_or_update(i, self.ds["train"][i]["prompt"])
+                self.hit_rate.append(self.cache_hit / (self.cache_hit + self.miss))
+                self.error_rate.append((self.cache_hit - self.right_hit) / (self.cache_hit + self.miss))
+                self.sample_counts.append(i + 1)
+            self.list_store.save_list([self.sample_counts, self.hit_rate, self.error_rate])
+        self.sqllite_db.close()
+        self.prompt_db.close()
+        self.milvus_db.close()
+        self.pic_gen = picture_generator(self.sample_counts, self.hit_rate, self.error_rate)
+        os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}", exist_ok=True)
+        os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}", exist_ok=True)
+        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_hit_rate_new.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate_new.png")
         print("Cache plots saved.")
 
 class vcache_base(cache_test):
@@ -261,6 +317,7 @@ if __name__ == "__main__":
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = gpt_cache_test(dataset, embedding_model, must_run=True)
+    test = gpt_cache_test_new(dataset, embedding_model, must_run=False)
     test.test_self()
+
     

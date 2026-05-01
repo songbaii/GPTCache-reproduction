@@ -139,3 +139,33 @@ class vcache_hit_record_SQLiteManager(SQLiteManager):
             c_vals = json.loads(row[2])
             records.append((id, s_vals, c_vals))
         return records
+
+class gpt_cache_prompt_SQLiteManager(SQLiteManager):
+    def create_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS gpt_cache_prompt")
+        self.conn.commit()
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS gpt_cache_prompt (
+                id INTEGER PRIMARY KEY,
+                prompt TEXT
+            )
+        ''')
+        self.conn.commit()
+        cursor.close()
+
+    def add_or_update(self, id: int, prompt: str):
+        cursor = self.conn.cursor()
+        cursor.execute(f'''
+            INSERT OR REPLACE INTO gpt_cache_prompt (id, prompt) 
+            VALUES (?, ?)
+        ''', (id, prompt))
+        self.conn.commit()
+        cursor.close()
+
+    def search_by_id(self, id: int)-> str:
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT prompt FROM gpt_cache_prompt WHERE id=?", (id,))
+        result = cursor.fetchone()
+        cursor.close()
+        return result[0]

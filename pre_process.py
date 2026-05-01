@@ -34,7 +34,6 @@ class pre_processor:
         ds["train"] = ds["train"].remove_columns(columns_to_remove)
         ds["train"] = ds["train"].map(lambda x: {**x, "prompt": self.pre_process_vector_prompt(x["prompt"])})
         return ds
-
     
 
 if __name__ == '__main__':

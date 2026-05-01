@@ -44,8 +44,7 @@ class embedding_generator:
             else:
                 raise ValueError("不支持的embedding_model")
             model = SentenceTransformer(embedding_model_real, trust_remote_code=True)
-            ds = ds.map(lambda x: {**x, "embedding": model.encode(x["prompt"], normalize_embeddings=True, batch_size=32)}, batched=True, batch_size=16)
-            ds["train"] = ds["train"].remove_columns(["prompt"])
+            ds = ds.map(lambda x: {**x, "embedding": model.encode(x["prompt"], normalize_embeddings=True)}, batched=True)
             ds.save_to_disk(path)
             return ds
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
-    embedding_model = "gte-large-en-v1.5"
+    embedding_model = "paraphrase-albert-small-v2"
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
@@ -69,4 +68,17 @@ if __name__ == "__main__":
         ds = processor.pre_process_vector()
         print(f"开始嵌入 {ds_name} 数据集...", flush=True)
         ds = embedder.embed_ds(ds, rf"{dir_path}/data/{ds_name}_{embedding_model}_embedding")
+        print("ds的列名：", ds["train"].column_names)
         print(f"{ds_name} 处理完毕", flush=True)
+    
+    '''path = rf"/home/songbaii/GPTCache-reproduction/data/SemBenchmarkSearchQueries_e5-large-v2_embedding"
+    ds_1 = load_from_disk(path)
+    from pre_process import pre_processor
+    processor = pre_processor("SemBenchmarkSearchQueries")
+    ds_2 = processor.pre_process_vector()
+    print("ds_1 columns:", ds_1["train"].column_names)
+    print("ds_2 columns:", ds_2["train"].column_names)
+    ds_1["train"] = ds_1["train"].add_column("prompt", ds_2["train"]["prompt"])
+    print("ds_1 columns after adding prompt:", ds_1["train"].column_names)
+    ds_1.save_to_disk(rf"{path}_with_prompt")'''
+
