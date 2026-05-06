@@ -43,3 +43,4 @@ if __name__ == '__main__':
         processor = pre_processor(ds)
         ds = processor.pre_process_vector()
         print("处理后的列名：", ds["train"].column_names)
+        print("数据集的大小为：", len(ds["train"]))

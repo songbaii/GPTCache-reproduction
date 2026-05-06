@@ -85,7 +85,6 @@ class gpt_cache_test(cache_test):
         self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate.png")
         print("Cache plots saved.")
 
-
 class gpt_cache_test_new(cache_test):
     def __init__(self, dataset, embedding_model, must_run = False):
         super().__init__(dataset, embedding_model)
@@ -145,6 +144,7 @@ class vcache_base(cache_test):
         super().__init__(dataset, embedding_model)
         self.cache = cache
         self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json")
+        print(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_{self.cache.__class__.__name__}_delta = {self.cache.delta}_vcache_get_list_cache.json")
         self.must_run = must_run
 
     def test_self(self):
@@ -317,7 +317,7 @@ if __name__ == "__main__":
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = gpt_cache_test_new(dataset, embedding_model, must_run=False)
+    test = vcache_base(dataset=dataset, embedding_model=embedding_model, cache=SimpleVCache(delta=0.1), must_run=False)
     test.test_self()
 
     
