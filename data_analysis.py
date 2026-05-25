@@ -2,6 +2,10 @@ from list_store import list_store
 import os
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from scipy.stats import gaussian_kde
+import matplotlib
+import numpy as np
+from collections import defaultdict
 
 class different_cache_compare:
     def __init__(self, dataset: str, embedding: str):
@@ -309,6 +313,213 @@ class compare_by_cache_all:
         fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
         plt.savefig(rf"{dir_path}/pictures/final/comparison_by_cache_vCache.png")
 
+class compare_by_embedding_similarity:
+    def __init__(self):
+        datasets = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
+        embeddings = ["paraphrase-albert-small-v2", "e5-large-v2"]
+        self.data = defaultdict(dict)
+        self.dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        for i, dataset in enumerate(datasets):
+            for j, embedding in enumerate(embeddings):
+                self.data[i][j] = list_store(rf"{self.dir_path}/data/{dataset}_{embedding}_gpt_kde_similarities_cache.json")
+
+    def draw_kde(self):
+        matplotlib.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'SimHei', 'WenQuanYi Zen Hei']
+        matplotlib.rcParams['axes.unicode_minus'] = False
+        fig = plt.figure(figsize=(16, 8))
+
+        plt.subplot(2, 3, 1)
+        plt.title(rf'SemBenchmarkClassificationSorted', fontsize=20)
+        right_similarities = self.data[0][0].load_list()[0]
+        wrong_similarities = self.data[0][0].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(0, 1, 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        '''mean_right = np.mean(right_similarities)
+        mean_wrong = np.mean(wrong_similarities)
+        plt.axvline(mean_right, color='green', linestyle='--')
+        plt.axvline(mean_wrong, color='red', linestyle='--')'''
+        plt.plot(x, y_right, label='right hit', color='green')
+        plt.plot(x, y_wrong, label='wrong hit', color='red')
+        plt.ylabel('pdf(paraphrase-albert-small-v2)', fontsize=16, fontweight='bold')
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+        
+        plt.subplot(2, 3, 2)
+        plt.title(rf'SemBenchmarkLmArena', fontsize=20)
+        right_similarities = self.data[1][0].load_list()[0]
+        wrong_similarities = self.data[1][0].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(0, 1, 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        '''mean_right = np.mean(right_similarities)
+        mean_wrong = np.mean(wrong_similarities)
+        plt.axvline(mean_right, color='green', linestyle='--')
+        plt.axvline(mean_wrong, color='red', linestyle='--')'''
+        plt.plot(x, y_right, label='right hit', color='green')
+        plt.plot(x, y_wrong, label='wrong hit', color='red')
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+
+        plt.subplot(2, 3, 3)
+        plt.title(rf'SemBenchmarkSearchQueries', fontsize=20)
+        right_similarities = self.data[2][0].load_list()[0]
+        wrong_similarities = self.data[2][0].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(0, 1, 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        plt.plot(x, y_right, color='green')
+        plt.plot(x, y_wrong, color='red')
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+
+        plt.subplot(2, 3, 4)
+        right_similarities = self.data[0][1].load_list()[0]
+        wrong_similarities = self.data[0][1].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(min(right_similarities + wrong_similarities), max(right_similarities + wrong_similarities), 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        '''mean_right = np.mean(right_similarities)
+        mean_wrong = np.mean(wrong_similarities)
+        plt.axvline(mean_right, color='green', linestyle='--')
+        plt.axvline(mean_wrong, color='red', linestyle='--')'''
+        plt.plot(x, y_right, label='right hit', color='green')
+        plt.plot(x, y_wrong, label='wrong hit', color='red')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        plt.xlabel('similarity', fontsize=20)
+        plt.ylabel('pdf(e5-large-v2)', fontsize=16, fontweight='bold')
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+
+        plt.subplot(2, 3, 5)
+        right_similarities = self.data[1][1].load_list()[0]
+        wrong_similarities = self.data[1][1].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(min(right_similarities + wrong_similarities), max(right_similarities + wrong_similarities), 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        '''mean_right = np.mean(right_similarities)
+        mean_wrong = np.mean(wrong_similarities)
+        plt.axvline(mean_right, color='green', linestyle='--')
+        plt.axvline(mean_wrong, color='red', linestyle='--')'''
+        plt.plot(x, y_right, label='right hit', color='green')
+        plt.plot(x, y_wrong, label='wrong hit', color='red')
+        plt.xlabel('similarity', fontsize=20)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+
+        plt.subplot(2, 3, 6)
+        right_similarities = self.data[2][1].load_list()[0]
+        wrong_similarities = self.data[2][1].load_list()[1]
+        kde_right = gaussian_kde(right_similarities, bw_method='scott')
+        kde_wrong = gaussian_kde(wrong_similarities, bw_method='scott')
+        x = np.linspace(min(right_similarities + wrong_similarities), max(right_similarities + wrong_similarities), 1000)
+        y_right = kde_right(x)
+        y_wrong = kde_wrong(x)
+        plt.plot(x, y_right, color='green')
+        plt.plot(x, y_wrong, color='red')
+        plt.xlabel('similarity', fontsize=20)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+
+        fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        plt.savefig(rf"{self.dir_path}/pictures/final/comparison_by_embedding_similarity.png")
+        
+class test_different_embedding:
+    def __init__(self):
+        self.dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        datasets = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
+        similarities = ["", "0.958"]
+        embeddings = ["paraphrase-albert-small-v2", "e5-large-v2"]
+        self.data = defaultdict(defaultdict)
+        for i, dataset in enumerate(datasets):
+            for j, embedding in enumerate(embeddings):
+                self.data[i][j] = list_store(rf"{self.dir_path}/data/{dataset}_{embedding}_gpt_get_list_cache{similarities[j]}.json").load_list()
+        self.add_data = defaultdict()
+        for i, dataset in enumerate(datasets):
+            self.add_data[i] = list_store(rf"{self.dir_path}/data/{dataset}_e5-large-v2_gpt_get_list_cache.json").load_list()
+        
+    def draw(self):
+        fig = plt.figure(figsize=(18, 8))
+        title_size = 20
+        left_label_size = title_size - 2
+        x_size = title_size - 4
+        y_size = title_size - 4
+        plt.subplot(2, 3, 1)
+        plt.plot(self.data[0][0][0], self.data[0][0][2], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[0][1][0], self.data[0][1][2], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[0][0], self.add_data[0][2], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.ylabel('Cache Error Rate', fontsize=left_label_size, fontweight='bold')
+        plt.title(rf'SemBenchmarkClassificationSorted', fontsize=title_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 2)
+        plt.plot(self.data[1][0][0], self.data[1][0][2], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[1][1][0], self.data[1][1][2], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[1][0], self.add_data[1][2], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.title(rf'SemBenchmarkLmArena', fontsize=title_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+
+        plt.subplot(2, 3, 3)
+        plt.plot(self.data[2][0][0], self.data[2][0][2], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[2][1][0], self.data[2][1][2], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[2][0], self.add_data[2][2], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.title(rf'SemBenchmarkSearchQueries', fontsize=title_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+
+        plt.subplot(2, 3, 4)
+        plt.plot(self.data[0][0][0], self.data[0][0][1], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[0][1][0], self.data[0][1][1], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[0][0], self.add_data[0][1], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        plt.ylabel('Cache Hit Rate', fontsize=left_label_size, fontweight='bold')
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 5)
+        plt.plot(self.data[1][0][0], self.data[1][0][1], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[1][1][0], self.data[1][1][1], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[1][0], self.add_data[1][1], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+
+        plt.subplot(2, 3, 6)
+        plt.plot(self.data[2][0][0], self.data[2][0][1], label='paraphrase-albert-small-v2 with threshold 0.86', color='blue')
+        plt.plot(self.data[2][1][0], self.data[2][1][1], label='e5-large-v2 with threshold 0.958', color='orange')
+        plt.plot(self.add_data[2][0], self.add_data[2][1], label='e5-large-v2 with threshold 0.86', color='red')
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        handles, labels = plt.gca().get_legend_handles_labels()
+
+        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        plt.savefig(rf"{self.dir_path}/pictures/final/comparison_by_different_embedding_with_adjusted_thresholds.png")
+
+        
+
+
+
 if __name__ == '__main__':
     '''
     dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
@@ -319,7 +530,9 @@ if __name__ == '__main__':
     for dataset in datasets:
         for embedding in embeddings:
             test = different_cache_compare(dataset, embedding)
-            test.compare_all()'''
+            test.compare_all()
     test = compare_by_embedding_all("paraphrase-albert-small-v2")
     test = compare_by_embedding_all("e5-large-v2")
-    test = compare_by_cache_all()
+    test = compare_by_cache_all()'''
+    test = test_different_embedding()
+    test.draw()

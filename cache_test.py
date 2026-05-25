@@ -47,13 +47,14 @@ class cache_test:
         pass
         
 class gpt_cache_test(cache_test):
-    def __init__(self, dataset, embedding_model, must_run = False):
+    def __init__(self, dataset, embedding_model, must_run = False, threshold=0.86):
         super().__init__(dataset, embedding_model)
-        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache.json")
+        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache{threshold}.json")
         self.must_run = must_run
+        self.threshold = threshold
 
-    def test_self(self):
-        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache.json") and not self.must_run:
+    def test_self(self): 
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_get_list_cache{self.threshold}.json") and not self.must_run:
             print("Loading results from cache...")
             load_result = self.list_store.load_list()
             self.sample_counts = load_result[0]
@@ -62,7 +63,7 @@ class gpt_cache_test(cache_test):
         else:
             for i in range(len(self.ds["train"])):
                 query_embedding = self.ds["train"][i]["embedding"]
-                similar_ids = self.milvus_db.single_search_collection(self.dataset + "_collection", query_embedding, threshold=0.86)
+                similar_ids = self.milvus_db.single_search_collection(self.dataset + "_collection", query_embedding, threshold=self.threshold) # 这个阈值
                 if similar_ids:
                     self.cache_hit += 1
                     if self.sqllite_db.search_by_id(similar_ids[0][0]) == [self.ds["train"][i][key] for key in self.key_name]:
@@ -81,20 +82,21 @@ class gpt_cache_test(cache_test):
         os.makedirs(rf"{self.dir_path}/pictures", exist_ok=True)
         os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}", exist_ok=True)
         os.makedirs(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}", exist_ok=True)
-        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_hit_rate.png")
-        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate.png")
+        self.pic_gen.plot_hit_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_hit_rate_threshold{self.threshold}.png")
+        self.pic_gen.plot_error_rate(rf"{self.dir_path}/pictures/{self.dataset}/{self.embedding_mod}/gpt_error_rate_threshold{self.threshold}.png")
         print("Cache plots saved.")
 
 class gpt_cache_test_new(cache_test):
-    def __init__(self, dataset, embedding_model, must_run = False):
+    def __init__(self, dataset, embedding_model, must_run = False, threshold=0.86):
         super().__init__(dataset, embedding_model)
-        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache.json")
+        self.list_store = list_store(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache{threshold}.json")
         self.must_run = must_run
+        self.threshold = threshold
         self.prompt_db = gpt_cache_prompt_SQLiteManager(rf"{self.dir_path}/sqlite_cache.db")
         self.Onnx_evaluator = Onnx_eval()
 
     def test_self(self):
-        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache.json") and not self.must_run:
+        if os.path.exists(rf"{self.dir_path}/data/{self.dataset}_{self.embedding_mod}_gpt_new_get_list_cache{self.threshold}.json") and not self.must_run:
             print("Loading results from cache...")
             load_result = self.list_store.load_list()
             self.sample_counts = load_result[0]
@@ -110,7 +112,7 @@ class gpt_cache_test_new(cache_test):
                         candidates.append(self.prompt_db.search_by_id(smilar_id))
                     score = self.Onnx_evaluator.eval_one_to_many(self.ds["train"][i]["prompt"], candidates)
                     max_score_index = score.index(max(score))
-                    if score[max_score_index] > 0.86: # 这个阈值
+                    if score[max_score_index] > self.threshold: # 这个阈值
                         self.cache_hit += 1
                         if self.sqllite_db.search_by_id(similar_ids[max_score_index][0]) == [self.ds["train"][i][key] for key in self.key_name]:
                             self.right_hit += 1
@@ -309,15 +311,20 @@ class gpt_cache_new(gpt_cache_test):
     
 
 if __name__ == "__main__":
-    dataset = "SemBenchmarkClassificationSorted"
+    dataset = "SemBenchmarkSearchQueries"
     # SemBenchmarkClassificationSorted
     # SemBenchmarkLmArena
     # SemBenchmarkSearchQueries
-    embedding_model = "paraphrase-albert-small-v2"
+    embedding_model = "e5-large-v2"
     # 'paraphrase-albert-small-v2' check
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
-    test = vcache_base(dataset=dataset, embedding_model=embedding_model, cache=SimpleVCache(delta=0.1), must_run=False)
-    test.test_self()
+    datasets = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
+    embedding_models = ["paraphrase-albert-small-v2", "e5-large-v2"]
+    for dataset in datasets:
+        for embedding_model in embedding_models:
+            print(f"Testing GPTCache on dataset: {dataset} with embedding model: {embedding_model}")
+            tester = gpt_cache_test(dataset, embedding_model, must_run=False, threshold=0.86)
+            tester.test_self()
 
     
