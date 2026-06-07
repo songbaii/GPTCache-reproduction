@@ -1,6 +1,9 @@
+import matplotlib.pyplot as plt
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Noto Sans CJK SC', 'WenQuanYi Zen Hei']
+plt.rcParams['axes.unicode_minus'] = False
 from list_store import list_store
 import os
-import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from scipy.stats import gaussian_kde
 import matplotlib
@@ -98,7 +101,7 @@ class compare_by_embedding_all:
         test = []
         for dataset in datasets:
             test.append([different_cache_compare(dataset, embedding).db_GPTcache_cos, different_cache_compare(dataset, embedding).db_GPTcache_new, different_cache_compare(dataset, embedding).db_vCache_01, different_cache_compare(dataset, embedding).db_vCache_0015])
-        fig = plt.figure(figsize=(16, 8))
+        fig = plt.figure(figsize=(16, 11))
         title_size = 20
         left_label_size = title_size - 2
         x_size = title_size - 4
@@ -168,8 +171,9 @@ class compare_by_embedding_all:
         plt.yticks(fontsize=y_size)
         ax = plt.gca()
         ax.xaxis.set_major_locator(MaxNLocator(5))
-        plt.tight_layout(rect=[0, 0, 1, 0.9])
-        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        #plt.tight_layout(rect=[0, 0, 1, 0.9])
+        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 1))
+        fig.suptitle(rf'{embedding} 嵌入下性能表现', fontsize=22, y=0.05)
         dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         plt.savefig(rf"{dir_path}/pictures/final/comparison_by_{embedding}.png")
 
@@ -185,7 +189,7 @@ class compare_by_cache_all:
         left_label_size = title_size - 2
         x_size = title_size - 4
         y_size = title_size - 4
-        fig = plt.figure(figsize=(16, 8))
+        fig = plt.figure(figsize=(16, 11))
         plt.subplot(2, 3, 1)
         plt.plot(test[0][0][0], test[0][0][2], label='GPT Semantic Cache at paraphrase-albert-small-v2', color='blue')
         plt.plot(test[0][1][0], test[0][1][2], label='GPT Cache at paraphrase-albert-small-v2', color='cyan')
@@ -245,11 +249,12 @@ class compare_by_cache_all:
         plt.xlabel('Number of Queries', fontsize=left_label_size)
         ax = plt.gca()
         ax.xaxis.set_major_locator(MaxNLocator(5))
-        plt.tight_layout(rect=[0, 0, 1, 0.9])
+        #plt.tight_layout(rect=[0, 0, 1, 0.9])
         fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
         dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        fig.suptitle(rf'不同嵌入模型下 GPTcache 和GPT Semantic Cache 性能表现', fontsize=22, y=0.05)
         plt.savefig(rf"{dir_path}/pictures/final/comparison_by_cache_GPT.png")
-        fig = plt.figure(figsize=(16, 8))
+        fig = plt.figure(figsize=(16, 11))
         plt.subplot(2, 3, 1)
         plt.plot(test[0][2][0], test[0][2][2], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
         plt.plot(test[0][3][0], test[0][3][2], label='vCache Delta=0.015 at paraphrase-albert-small-v2', color='cyan')
@@ -309,8 +314,9 @@ class compare_by_cache_all:
         ax.xaxis.set_major_locator(MaxNLocator(5))
         plt.xticks(fontsize=x_size)
         plt.yticks(fontsize=y_size)
-        plt.tight_layout(rect=[0, 0, 1, 0.9])
-        fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        #plt.tight_layout(rect=[0, 0, 1, 0.9])
+        fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.005))
+        fig.suptitle(rf'不同嵌入模型下 vCache 性能表现', fontsize=22, y=0.05)
         plt.savefig(rf"{dir_path}/pictures/final/comparison_by_cache_vCache.png")
 
 class compare_by_embedding_similarity:
@@ -326,7 +332,7 @@ class compare_by_embedding_similarity:
     def draw_kde(self):
         matplotlib.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'SimHei', 'WenQuanYi Zen Hei']
         matplotlib.rcParams['axes.unicode_minus'] = False
-        fig = plt.figure(figsize=(16, 8))
+        fig = plt.figure(figsize=(16, 10))
 
         plt.subplot(2, 3, 1)
         plt.title(rf'SemBenchmarkClassificationSorted', fontsize=20)
@@ -431,7 +437,8 @@ class compare_by_embedding_similarity:
         plt.xticks(fontsize=16)
         plt.yticks(fontsize=16)
 
-        fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        fig.legend(handles, labels, loc='upper center', ncol=2, fontsize = 18, bbox_to_anchor=(0.5, 0.99))
+        fig.suptitle(rf'GPT Semantic Cache 不同嵌入模型下余弦相似度高斯核密度估计', fontsize=20, y=0.05)
         plt.savefig(rf"{self.dir_path}/pictures/final/comparison_by_embedding_similarity.png")
         
 class test_different_embedding:
@@ -449,7 +456,7 @@ class test_different_embedding:
             self.add_data[i] = list_store(rf"{self.dir_path}/data/{dataset}_e5-large-v2_gpt_get_list_cache.json").load_list()
         
     def draw(self):
-        fig = plt.figure(figsize=(18, 8))
+        fig = plt.figure(figsize=(18, 11))
         title_size = 20
         left_label_size = title_size - 2
         x_size = title_size - 4
@@ -513,11 +520,90 @@ class test_different_embedding:
         ax.xaxis.set_major_locator(MaxNLocator(5))
         handles, labels = plt.gca().get_legend_handles_labels()
 
-        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 0.99))
+        fig.suptitle(rf'GPT Semantic Cache 线性映射阈值效果对比图', fontsize=22, y=0.05)
         plt.savefig(rf"{self.dir_path}/pictures/final/comparison_by_different_embedding_with_adjusted_thresholds.png")
 
-        
+class test_different_vcache:
+    def __init__(self):
+        self.dir_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        datasets = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
+        embeddings = ["paraphrase-albert-small-v2", "e5-large-v2"]
+        self.data = defaultdict(defaultdict)
+        for i, dataset in enumerate(datasets):
+            for j, embedding in enumerate(embeddings):
+                self.data[i][j] = list_store(rf"{self.dir_path}/data/{dataset}_{embedding}_SimpleVCache_delta = 0.1_vcache_get_list_cache.json").load_list()
+        self.add_data = defaultdict()
+        for i, dataset in enumerate(datasets):
+            self.add_data[i] = list_store(rf"{self.dir_path}/data/{dataset}_e5-large-v2_SimpleVCache_delta = 0.03_vcache_get_list_cache.json").load_list()
 
+    def draw(self):
+        fig = plt.figure(figsize=(18, 8))
+        title_size = 20
+        left_label_size = title_size - 2
+        x_size = title_size - 4
+        y_size = title_size - 4
+        plt.subplot(2, 3, 1)
+        plt.plot(self.data[0][0][0], self.data[0][0][2], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[0][1][0], self.data[0][1][2], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[0][0], self.add_data[0][2], label='vCache Delta=0.03 at e5-large-v2', color='red')
+        plt.ylabel('Cache Error Rate', fontsize=left_label_size, fontweight='bold')
+        plt.title(rf'SemBenchmarkClassificationSorted', fontsize=title_size)
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 2)
+        plt.plot(self.data[1][0][0], self.data[1][0][2], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[1][1][0], self.data[1][1][2], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[1][0], self.add_data[1][2], label='vCache Delta=0.03 at e5-large-v2', color='red')
+        plt.title(rf'SemBenchmarkLmArena', fontsize=title_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 3)
+        plt.plot(self.data[2][0][0], self.data[2][0][2], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[2][1][0], self.data[2][1][2], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[2][0], self.add_data[2][2], label='vCache Delta=0.03 at e5-large-v2', color='red')
+        plt.title(rf'SemBenchmarkSearchQueries', fontsize=title_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 4)
+        plt.plot(self.data[0][0][0], self.data[0][0][1], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[0][1][0], self.data[0][1][1], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[0][0], self.add_data[0][1], label='vCache Delta=0.03 at e5-large-v2', color='red')   
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        plt.ylabel('Cache Hit Rate', fontsize=left_label_size, fontweight='bold')
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+        
+        plt.subplot(2, 3, 5)
+        plt.plot(self.data[1][0][0], self.data[1][0][1], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[1][1][0], self.data[1][1][1], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[1][0], self.add_data[1][1], label='vCache Delta=0.03 at e5-large-v2', color='red')
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        plt.subplot(2, 3, 6)
+        plt.plot(self.data[2][0][0], self.data[2][0][1], label='vCache Delta=0.1 at paraphrase-albert-small-v2', color='blue')
+        plt.plot(self.data[2][1][0], self.data[2][1][1], label='vCache Delta=0.1 at e5-large-v2', color='orange')
+        plt.plot(self.add_data[2][0], self.add_data[2][1], label='vCache Delta=0.03 at e5-large-v2', color='red')
+        plt.xlabel('Number of Queries', fontsize=left_label_size)
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        plt.xticks(fontsize=x_size)
+        plt.yticks(fontsize=y_size)
+
+        handles, labels = plt.gca().get_legend_handles_labels()
+        fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 18, bbox_to_anchor=(0.5, 1.01))
+        plt.savefig(rf"{self.dir_path}/pictures/final/comparison_by_different_vcache_with_adjusted_thresholds.png")
 
 
 if __name__ == '__main__':
@@ -531,8 +617,8 @@ if __name__ == '__main__':
         for embedding in embeddings:
             test = different_cache_compare(dataset, embedding)
             test.compare_all()
+    '''
     test = compare_by_embedding_all("paraphrase-albert-small-v2")
     test = compare_by_embedding_all("e5-large-v2")
-    test = compare_by_cache_all()'''
-    test = test_different_embedding()
-    test.draw()
+    
+    

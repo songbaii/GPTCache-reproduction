@@ -320,11 +320,11 @@ if __name__ == "__main__":
     # 'gte-large-en-v1.5',暂时不知道为什么不能使用
     # 'e5-large-v2' check 
     datasets = ["SemBenchmarkClassificationSorted", "SemBenchmarkLmArena", "SemBenchmarkSearchQueries"]
-    embedding_models = ["paraphrase-albert-small-v2", "e5-large-v2"]
+    embedding_models = ["e5-large-v2"]
     for dataset in datasets:
         for embedding_model in embedding_models:
             print(f"Testing GPTCache on dataset: {dataset} with embedding model: {embedding_model}")
-            tester = gpt_cache_test(dataset, embedding_model, must_run=False, threshold=0.86)
+            tester = vcache_base(dataset, embedding_model, SimpleVCache(delta=0.03), must_run=False)
             tester.test_self()
 
     
